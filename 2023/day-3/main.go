@@ -197,7 +197,6 @@ func main() {
 	for i, row := range rows {
 		rows[i] = strings.TrimSpace(row)
 	}
-	sum := 0
     indexNum := map[string]int{}
 	for row := 0; row < len(rows); row++ {
 		for col := 0; col < len(rows[row]); col++ {
@@ -206,51 +205,79 @@ func main() {
 				if col-1 >= 0 && unicode.IsDigit(rune(rows[row][col-1])) {
 					num, s, e:= extractNumber(rows[row], col-1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if col+1 <= len(rows[row])-1 && unicode.IsDigit(rune(rows[row][col+1])) {
 					num, s, e := extractNumber(rows[row], col+1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row-1 >= 0 && unicode.IsDigit(rune(rows[row-1][col])) {
 					num, s, e := extractNumber(rows[row-1], col)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row - 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row+1 < len(rows) && unicode.IsDigit(rune(rows[row+1][col])) {
 					num, s, e := extractNumber(rows[row+1], col)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row + 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row-1 >= 0 && col-1 >= 0 && unicode.IsDigit(rune(rows[row-1][col-1])) {
 					num, s, e:= extractNumber(rows[row-1], col-1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row - 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row-1 >= 0 && col+1 < len(rows[row]) && unicode.IsDigit(rune(rows[row-1][col+1])) {
 					num, s, e := extractNumber(rows[row-1], col+1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row - 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row+1 < len(rows) && col-1 >= 0 && unicode.IsDigit(rune(rows[row+1][col-1])) {
 					num, s, e := extractNumber(rows[row+1], col-1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row + 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 				if row+1 < len(rows) && col+1 < len(rows[row]) && unicode.IsDigit(rune(rows[row+1][col+1])) {
 					num, s, e := extractNumber(rows[row+1], col+1)
                     numId := fmt.Sprintf("%d-%d-%d-%d", s, e, row + 1, num)
-                    indexNum[numId]++
+                    parentId := fmt.Sprintf("%d-%d-%s", row, col, string(current))
+                    id := fmt.Sprintf("%s|%s", parentId, numId)
+                    indexNum[id]++
 				}
 			}
 		}
 	}
-    fmt.Println(indexNum)
+    parents := map[string][]int{}
+	sum := 0
+    gearSum := 0
     for k   := range indexNum {
-        numStr := strings.Split(k, "-")[3]
+        numId := strings.Split(k, "|")[1]
+        numStr := strings.Split(numId, "-")[3]
         num, _ := strconv.Atoi(numStr)
+        parentId := strings.Split(k, "|")[0]
+        parents[parentId] = append(parents[parentId], num)
         sum += num 
     }
+    for k,v := range parents {
+        symbol := strings.Split(k, "-")[2]
+        if len(v) > 1 && symbol == "*" {
+            gearSum += v[0] * v[1]
+        }
+    }
 		fmt.Println(sum)
+		fmt.Println(gearSum)
 }
