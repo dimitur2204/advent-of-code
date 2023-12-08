@@ -6,62 +6,104 @@ import (
 	"strings"
 )
 
-func parseCards(input string) [][][]int{
-    cards := [][][]int{}
-    lines := strings.Split(input, "\n")
-    lines = lines[1:len(lines)-1]
-    for _, line := range lines {
-        numbers := strings.Split(line, ":")[1]
-        winningStr := strings.Split(numbers, "|")[0]
-        ours := strings.Split(numbers, "|")[1]
-        winning := []int{}
-        our := []int{}
-        for _, num := range strings.Split(winningStr, " ") {
-            if num == "" {
-                continue
-            }
-            numConv, _ := strconv.Atoi(num)
-            winning = append(winning, numConv)
-        }
-        for _, num := range strings.Split(ours, " ") {
-            if num == "" {
-                continue
-            }
-            numConv, _ := strconv.Atoi(num)
-            our = append(our, numConv)
-        }
-        cards = append(cards, [][]int{winning, our})
-    }
+func parseCards(input string) [][][]int {
+	cards := [][][]int{}
+	lines := strings.Split(input, "\n")
+	lines = lines[1 : len(lines)-1]
+	for _, line := range lines {
+		numbers := strings.Split(line, ":")[1]
+		winningStr := strings.Split(numbers, "|")[0]
+		ours := strings.Split(numbers, "|")[1]
+		winning := []int{}
+		our := []int{}
+		for _, num := range strings.Split(winningStr, " ") {
+			if num == "" {
+				continue
+			}
+			numConv, _ := strconv.Atoi(num)
+			winning = append(winning, numConv)
+		}
+		for _, num := range strings.Split(ours, " ") {
+			if num == "" {
+				continue
+			}
+			numConv, _ := strconv.Atoi(num)
+			our = append(our, numConv)
+		}
+		cards = append(cards, [][]int{winning, our})
+	}
 
-
-    return cards
+	return cards
 }
 
+func getCardScore(card [][]int, index int) int {
+	cardScore := 0
+	winning := card[0]
+	our := card[1]
+	for _, num := range winning {
+		for _, ourNum := range our {
+			if num == ourNum {
+				if cardScore == 0 {
+					cardScore = 1
+					continue
+				}
+				cardScore *= 2
+			}
+		}
+	}
+	return cardScore
+}
+
+func getCardMatches(card [][]int, index int) int {
+	matches := 0
+	winning := card[0]
+	our := card[1]
+	for _, num := range winning {
+		for _, ourNum := range our {
+			if num == ourNum {
+				matches++
+			}
+		}
+	}
+	return matches
+}
 func getScore(cards [][][]int) int {
-    fullScore := 0
-    for _, card := range cards {
-        cardScore := 0
-        winning := card[0]
-        our := card[1]
-        for _, num := range winning {
-            for _, ourNum := range our {
-                if num == ourNum {
-                    if cardScore == 0 {
-                        cardScore = 1
-                        continue
-                    }
-                    cardScore *= 2
-                }
-            }
-        }
-        fullScore += cardScore
+	fullScore := 0
+	for index, card := range cards {
+		cardScore := getCardScore(card, index)
+		fullScore += cardScore
+	}
+	return fullScore
+}
+
+func getRepeats(cards [][][]int) int {
+	copies := make(map[int]int)
+	for i := 0; i < len(cards); i++ {
+		copies[i] = 1
+	}
+
+	for index, card := range cards {
+		matches := getCardMatches(card, index)
+		copiesOfCard := copies[index]
+		for copiesOfCard != 0 {
+			matches = getCardMatches(card, index)
+			for matches != 0 {
+				copies[index+matches]++
+				matches--
+			}
+            copiesOfCard--
+		}
+	}
+    repeats := 0
+    for _, copiesOfCard := range copies {
+        repeats += copiesOfCard
     }
 
-    return fullScore
-
+	return repeats
 }
+
 func main() {
-    input := `
+	input := `
     Card   1: 52 74  9  7 90 77 55 97 31 66 | 29 80 38 92 54 28 36 17 81 19 96 24 64 90 69 86 37  1 94 31 13 84 23 68 58
 Card   2: 19 94 92 73 38 36 84 56 77 11 | 45  2 20 81 76 48 65 42 44 71 59 39 75 37 83 29 52 78 70 87 54 64 47 63 74
 Card   3: 91 11 74 58 59 60 50 44  2 14 | 53 94 58 35 73 80 71  9 74 44 66 40 95 50 42 91  2 24 60 59 11 14 37  5 45
@@ -262,7 +304,9 @@ Card 197: 62 33 96 37 22 14 49 27 39  6 | 94 97 85  5 57 48 64 38  8 71 79 19 65
 Card 198: 69 41 63 28  9 10  3 64 87 57 | 19 78 88 38 29 54 93 76 22 36 86 20 61 53 66  4 77 67 85 11 27 94 43 74 90
 Card 199: 88 39 24 36 67 97 72  9 13 30 | 17 12 16 38 89 64 99 96 79 84 81 11 90 21 76 91 78 42 50 18 48 62 58 59 63
     `
-cards := parseCards(input)
-score := getScore(cards)
-fmt.Println(score)
+	cards := parseCards(input)
+	score := getScore(cards)
+	repeats := getRepeats(cards)
+	fmt.Println(repeats)
+	fmt.Println(score)
 }
